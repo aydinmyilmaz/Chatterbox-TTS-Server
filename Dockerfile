@@ -1,53 +1,28 @@
-FROM nvidia/cuda:12.8.1-runtime-ubuntu22.04
+# --- Base Image (CUDA + PyTorch) ---
+FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
-ARG RUNTIME=nvidia
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV DEBIAN_FRONTEND=noninteractive
-# Set the Hugging Face home directory for better model caching
-ENV HF_HOME=/app/hf_cache
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libsndfile1 \
-    ffmpeg \
-    python3 \
-    python3-pip \
-    python3-dev \
-    python3-venv \
-    git \
-    && apt-get clean \
+# --- System packages ---
+RUN apt-get update && apt-get install -y \
+    git ffmpeg libsndfile1 build-essential python3.10-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a symlink for python3 to be python for convenience
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-# Set up working directory
-WORKDIR /app
-
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-
-# Upgrade pip and install Python dependencies
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
-# Conditionally install NVIDIA dependencies if RUNTIME is set to 'nvidia'
-COPY requirements-nvidia.txt .
-
-RUN if [ "$RUNTIME" = "nvidia" ]; then \
-    pip3 install --no-cache-dir -r requirements-nvidia.txt; \
-    fi
-# Copy the rest of the application code
+# --- Workspace setup ---
+WORKDIR /workspace
 COPY . .
 
-# Create required directories for the application (fixed syntax error)
-RUN mkdir -p model_cache reference_audio outputs voices logs hf_cache
+# --- Python setup ---
+RUN python3 -m venv /workspace/venv && \
+    . /workspace/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install chatterbox-tts fastapi uvicorn librosa pydub watchdog python-multipart tqdm safetensors soundfile \
+    git+https://github.com/resemble-ai/Resemblyzer.git \
+    openai-whisper hf_transfer pkuseg==0.0.25 numpy==1.26.4 cython
 
-# Expose the port the application will run on
-EXPOSE 8004
+# --- Force multilingual model ---
+RUN echo -e "\nmodel:\n  repo_id: ResembleAI/chatterbox-multilingual" > /workspace/config.yaml
 
-# Command to run the application
-CMD ["python3", "server.py"]
+# --- Copy handler script ---
+COPY handler.py /workspace/handler.py
+
+# --- Start Serverless Entry ---
+CMD ["python", "handler.py"]

@@ -1,9 +1,12 @@
 # Chatterbox TTS Server: OpenAI-Compatible API with Web UI, Large Text Handling & Built-in Voices
 
+[![RunPod](https://runpod.io/button.svg)](https://runpod.io/hub/your-github-username/chatterbox-multilingual-tts)
+
+
 **Self-host the powerful [Chatterbox TTS model](https://github.com/resemble-ai/chatterbox) with this enhanced FastAPI server! Features an intuitive Web UI, a flexible API endpoint, voice cloning, large text processing via intelligent chunking, audiobook generation, and consistent, reproducible voices using built-in ready-to-use voices and a generation seed feature.**
 
 > 🚀 **Try it now!** Test the full TTS server with voice cloning and audiobook generation in Google Colab - no installation required!
-> 
+>
 > [![Open Live Demo](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/devnen/Chatterbox-TTS-Server/blob/main/Chatterbox_TTS_Colab_Demo.ipynb)
 
 This server is based on the architecture and UI of our [Dia-TTS-Server](https://github.com/devnen/Dia-TTS-Server) project but uses the distinct `chatterbox-tts` engine. Runs accelerated on NVIDIA (CUDA), AMD (ROCm), and Apple Silicon (MPS) GPUs, with a fallback to CPU.
@@ -311,7 +314,7 @@ Apple Silicon requires a specific installation sequence due to dependency confli
 
 ### Why Try the Demo?
 - ✅ **Full Web UI** with all controls and features
-- ✅ **Voice cloning** with uploaded audio files  
+- ✅ **Voice cloning** with uploaded audio files
 - ✅ **Predefined voices** included
 - ✅ **Large text processing** with chunking (perfect for audiobooks)
 - ✅ **Free GPU acceleration** (T4 GPU)
@@ -507,7 +510,7 @@ docker compose up -d --build
 
 The most intuitive way to use the server:
 
-*   **Text Input:** Enter your plain text script. **For audiobooks:** Simply paste the entire book text - the chunking system will automatically handle long texts and create seamless audio output.   
+*   **Text Input:** Enter your plain text script. **For audiobooks:** Simply paste the entire book text - the chunking system will automatically handle long texts and create seamless audio output.
 *   **Voice Mode:** Choose:
     *   `Predefined Voices`: Select a curated voice from the `./voices` directory.
     *   `Voice Cloning`: Select an uploaded reference file from `./reference_audio`.
@@ -538,7 +541,7 @@ The primary endpoint for TTS generation is `/tts`, which offers detailed control
     *   `voice`: 'S1', 'S2', 'dialogue', 'predefined_voice_filename.wav', or 'reference_filename.wav'.
     *   `response_format`: 'opus' or 'wav'.
     *   `speed`: Playback speed factor (0.5-2.0).
-    *   `seed`: (Optional) Integer seed, -1 for random.    
+    *   `seed`: (Optional) Integer seed, -1 for random.
 *   **Helper Endpoints (mostly for UI):**
     *   `GET /api/ui/initial-data`: Fetches all initial configuration, file lists, and presets for the UI.
     *   `POST /save_settings`: Saves partial updates to `config.yaml`.
@@ -617,7 +620,7 @@ docker compose exec chatterbox-tts-server python3 -c "import torch; print(f'CUDA
 # Check if container can see AMD GPU
 docker compose -f docker-compose-rocm.yml exec chatterbox-tts-server rocm-smi
 
-# Verify PyTorch can access the GPU  
+# Verify PyTorch can access the GPU
 docker compose -f docker-compose-rocm.yml exec chatterbox-tts-server python3 -c "import torch; print(f'ROCm available: {torch.cuda.is_available()}'); print(f'Device name: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU detected\"}')"
 ```
 
@@ -648,7 +651,7 @@ If your AMD GPU is not officially supported by ROCm but is similar to a supporte
 # For RX 5000/6000 series (gfx10xx) - override to gfx1030
 HSA_OVERRIDE_GFX_VERSION=10.3.0 docker compose -f docker-compose-rocm.yml up -d
 
-# For RX 7000 series (gfx11xx) - override to gfx1100  
+# For RX 7000 series (gfx11xx) - override to gfx1100
 HSA_OVERRIDE_GFX_VERSION=11.0.0 docker compose -f docker-compose-rocm.yml up -d
 
 # For Vega cards - override to gfx906
@@ -685,11 +688,11 @@ lspci | grep VGA
 *   **CUDA out of memory:** Close other GPU applications, reduce `chunk_size` in the UI for long texts
 
 ### **AMD ROCm Issues:**
-*   **GPU not detected:** 
+*   **GPU not detected:**
     - Ensure ROCm drivers are installed on host: `sudo apt install rocm-dkms rocm-libs`
     - Verify your GPU is ROCm-compatible
     - Check user groups: `groups $USER` should include `video` and `render`
-*   **Permission errors:** 
+*   **Permission errors:**
     ```bash
     sudo usermod -a -G video,render $USER
     # Log out and back in
@@ -725,7 +728,7 @@ lspci | grep VGA
 Persistent data is stored on your host machine via volume mounts:
 
 *   `./config.yaml:/app/config.yaml` - Main application configuration
-*   `./voices:/app/voices` - Predefined voice audio files  
+*   `./voices:/app/voices` - Predefined voice audio files
 *   `./reference_audio:/app/reference_audio` - Your uploaded reference audio files for cloning
 *   `./outputs:/app/outputs` - Generated audio files saved from UI/API
 *   `./logs:/app/logs` - Server log files

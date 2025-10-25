@@ -1,0 +1,20 @@
+{
+  "title": "Chatterbox Multilingual TTS",
+  "description": "Serverless text-to-speech powered by Chatterbox multilingual model.",
+  "type": "serverless",
+  "category": "audio",
+  "iconUrl": "https://avatars.githubusercontent.com/u/9999999?s=200",
+  "config": {
+    "runsOn": "GPU",
+    "containerDiskInGb": 20,
+    "presets": [
+      {
+        "name": "Default",
+        "defaults": {
+          "LANGUAGE": "en"
+        }
+      }
+    ],
+    "env": []
+  }
+}

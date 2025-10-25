@@ -1,4 +1,5 @@
 import runpod
+from runpod.serverless.utils import upload_output
 from chatterbox_tts import ChatterboxTTS
 import torch
 

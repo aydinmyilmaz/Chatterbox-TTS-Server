@@ -2,35 +2,46 @@ import runpod
 from runpod.serverless.utils import upload_output
 from chatterbox_tts import ChatterboxTTS
 import torch
+import os
 
-# Load model once (on cold start)
+# Load model once on cold start
 print("🚀 Loading multilingual Chatterbox model...")
 model = ChatterboxTTS.load_model(repo_id="ResembleAI/chatterbox-multilingual")
 
 def handler(event):
     """
-    Serverless handler function.
-    RunPod calls this for each incoming job.
+    RunPod serverless handler.
+    Takes JSON input: {"text": "...", "language": "en"}
+    Returns link to generated WAV file.
     """
-    input_data = event.get("input", {})
-    text = input_data.get("text", "")
-    language = input_data.get("language", "en")
+    try:
+        input_data = event.get("input", {})
+        text = input_data.get("text", "")
+        language = input_data.get("language", "en")
 
-    if not text:
-        return {"error": "Missing 'text' input."}
+        if not text:
+            return {"error": "Missing 'text' field in input."}
 
-    print(f"🗣️ Generating TTS for '{text}' [{language}]")
+        print(f"🗣️ Generating TTS for: '{text}' [{language}]")
 
-    # Generate speech
-    output_wav = model.tts(text, language=language)
-    output_path = "/tmp/output.wav"
-    output_wav.save(output_path)
+        # Generate TTS
+        output_audio = model.tts(text, language=language)
+        output_path = "/tmp/output.wav"
+        output_audio.save(output_path)
 
-    return {
-        "status": "success",
-        "language": language,
-        "output": runpod.serverless.utils.upload_output(output_path)
-    }
+        print("✅ Audio generation complete.")
+        output_url = upload_output(output_path)
 
-# Required entrypoint
+        return {
+            "status": "success",
+            "language": language,
+            "text": text,
+            "output_url": output_url
+        }
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return {"error": str(e)}
+
+# Required RunPod entrypoint
 runpod.serverless.start({"handler": handler})

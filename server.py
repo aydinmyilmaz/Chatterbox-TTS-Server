@@ -733,6 +733,13 @@ async def custom_tts_endpoint(
     for i, chunk in enumerate(text_chunks):
         logger.info(f"Synthesizing chunk {i+1}/{len(text_chunks)}...")
         try:
+            # Extract language parameter from request or use default
+            language_to_use = (
+                request.language
+                if request.language is not None
+                else get_gen_default_language()
+            )
+
             chunk_audio_tensor, chunk_sr_from_engine = engine.synthesize(
                 text=chunk,
                 audio_prompt_path=(
@@ -758,6 +765,7 @@ async def custom_tts_endpoint(
                 seed=(
                     request.seed if request.seed is not None else get_gen_default_seed()
                 ),
+                language=language_to_use,
             )
             perf_monitor.record(f"Engine synthesized chunk {i+1}")
 
@@ -928,6 +936,10 @@ async def openai_speech_endpoint(request: OpenAISpeechRequest):
             request.seed if request.seed is not None else get_gen_default_seed()
         )
 
+        # Use default language for OpenAI-compatible endpoint
+        # (OpenAI API doesn't include language parameter, so we use config default)
+        language_to_use = get_gen_default_language()
+
         # Synthesize the audio
         audio_tensor, sr = engine.synthesize(
             text=request.input_,
@@ -936,6 +948,7 @@ async def openai_speech_endpoint(request: OpenAISpeechRequest):
             exaggeration=get_gen_default_exaggeration(),
             cfg_weight=get_gen_default_cfg_weight(),
             seed=seed_to_use,
+            language=language_to_use,
         )
 
         if audio_tensor is None or sr is None:

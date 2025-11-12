@@ -16,7 +16,8 @@ torchaudio==2.6.0               # Audio processing utilities for PyTorch
 
 # --- Core TTS Application ---
 # Chatterbox TTS engine - installed directly from GitHub
-chatterbox-tts==0.1.2
+# Version 0.1.4+ required for multilingual support (ChatterboxMultilingualTTS)
+chatterbox-tts>=0.1.4
 
 # --- Web Framework & Server ---
 fastapi                         # Modern async web framework
@@ -33,7 +34,7 @@ soundfile                       # Audio file I/O (requires libsndfile system lib
 pydub                          # Simple audio manipulation
 audiotsm                       # Audio time-scale modification
 praat-parselmouth              # Python interface to Praat speech analysis
-                               # NOTE: Use 'praat-parselmouth' not 'parselmouth' 
+                               # NOTE: Use 'praat-parselmouth' not 'parselmouth'
                                # to avoid setuptools use_2to3 compatibility issues
 
 # --- Web & API Utilities ---
@@ -53,7 +54,7 @@ tqdm                          # Progress bars for loops
 
 # ============================================================================
 # INSTALLATION NOTES:
-# 
+#
 # 1. Ensure your virtual environment is activated before installation
 # 2. Run: pip install --upgrade pip
 # 3. Run: pip install -r requirements.txt

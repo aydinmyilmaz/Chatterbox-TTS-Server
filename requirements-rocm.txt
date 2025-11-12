@@ -1,6 +1,7 @@
 # requirements.txt
 
-chatterbox-tts==0.1.2
+# Version 0.1.4+ required for multilingual support (ChatterboxMultilingualTTS)
+chatterbox-tts>=0.1.4
 
 # Core Web Framework
 fastapi

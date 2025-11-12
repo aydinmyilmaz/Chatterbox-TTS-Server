@@ -8,7 +8,7 @@ import torch
 from typing import Optional, Tuple
 from pathlib import Path
 
-from chatterbox.tts import ChatterboxTTS  # Main TTS engine class
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # Multilingual TTS engine class
 from chatterbox.models.s3gen.const import (
     S3GEN_SR,
 )  # Default sample rate from the engine
@@ -19,7 +19,7 @@ from config import config_manager
 logger = logging.getLogger(__name__)
 
 # --- Global Module Variables ---
-chatterbox_model: Optional[ChatterboxTTS] = None
+chatterbox_model: Optional[ChatterboxMultilingualTTS] = None
 MODEL_LOADED: bool = False
 model_device: Optional[str] = (
     None  # Stores the resolved device string ('cuda' or 'cpu')
@@ -157,23 +157,21 @@ def load_model() -> bool:
         model_device = resolved_device_str
         logger.info(f"Final device selection: {model_device}")
 
-        # Get configured model_repo_id for logging and context,
-        # though from_pretrained might use its own internal default if not overridden.
+        # Get configured model_repo_id for logging and context
+        # Default to multilingual model for multilingual TTS class
         model_repo_id_config = config_manager.get_string(
-            "model.repo_id", "ResembleAI/chatterbox"
+            "model.repo_id", "ResembleAI/chatterbox-multilingual"
         )
 
         logger.info(
-            f"Attempting to load model directly using from_pretrained (expected from Hugging Face repository: {model_repo_id_config} or library default)."
+            f"Attempting to load ChatterboxMultilingualTTS model using from_pretrained (expected from Hugging Face repository: {model_repo_id_config})."
         )
         try:
-            # Directly use from_pretrained. This will utilize the standard Hugging Face cache.
-            # The ChatterboxTTS.from_pretrained method handles downloading if the model is not in the cache.
-            chatterbox_model = ChatterboxTTS.from_pretrained(device=model_device)
-            # The actual repo ID used by from_pretrained is often internal to the library,
-            # but logging the configured one provides user context.
+            # Use ChatterboxMultilingualTTS.from_pretrained for multilingual support
+            # The multilingual class knows its repo_id and handles language parameters properly
+            chatterbox_model = ChatterboxMultilingualTTS.from_pretrained(device=model_device)
             logger.info(
-                f"Successfully loaded TTS model using from_pretrained on {model_device} (expected from '{model_repo_id_config}' or library default)."
+                f"Successfully loaded ChatterboxMultilingualTTS on {model_device} (expected repo '{model_repo_id_config}')."
             )
         except Exception as e_hf:
             logger.error(
@@ -214,6 +212,7 @@ def synthesize(
     exaggeration: float = 0.5,
     cfg_weight: float = 0.5,
     seed: int = 0,
+    language: Optional[str] = None,
 ) -> Tuple[Optional[torch.Tensor], Optional[int]]:
     """
     Synthesizes audio from text using the loaded TTS model.
@@ -226,6 +225,8 @@ def synthesize(
         cfg_weight: Classifier-Free Guidance weight.
         seed: Random seed for generation. If 0, default randomness is used.
               If non-zero, a global seed is set for reproducibility.
+        language: Language code for multilingual synthesis (e.g., 'en', 'ar', 'tr', 'de', 'fr', 'nl').
+                 If None, model will attempt to auto-detect or use default.
 
     Returns:
         A tuple containing the audio waveform (torch.Tensor) and the sample rate (int),
@@ -249,19 +250,26 @@ def synthesize(
 
         logger.debug(
             f"Synthesizing with params: audio_prompt='{audio_prompt_path}', temp={temperature}, "
-            f"exag={exaggeration}, cfg_weight={cfg_weight}, seed_applied_globally_if_nonzero={seed}"
+            f"exag={exaggeration}, cfg_weight={cfg_weight}, seed_applied_globally_if_nonzero={seed}, "
+            f"language={language}"
         )
 
-        # Call the core model's generate method
-        wav_tensor = chatterbox_model.generate(
-            text=text,
-            audio_prompt_path=audio_prompt_path,
-            temperature=temperature,
-            exaggeration=exaggeration,
-            cfg_weight=cfg_weight,
-        )
+        # Call the core model's generate method with language parameter for multilingual support
+        generate_kwargs = {
+            "text": text,
+            "audio_prompt_path": audio_prompt_path,
+            "temperature": temperature,
+            "exaggeration": exaggeration,
+            "cfg_weight": cfg_weight,
+        }
 
-        # The ChatterboxTTS.generate method already returns a CPU tensor.
+        # Add language parameter if provided (required for multilingual model)
+        if language is not None:
+            generate_kwargs["language"] = language
+
+        wav_tensor = chatterbox_model.generate(**generate_kwargs)
+
+        # The ChatterboxMultilingualTTS.generate method already returns a CPU tensor.
         return wav_tensor, chatterbox_model.sr
 
     except Exception as e:

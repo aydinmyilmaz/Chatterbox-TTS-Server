@@ -49,7 +49,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "log_file_backup_count": 5,  # Number of backup log files to keep.
     },
     "model": {  # Added section for model source configuration
-        "repo_id": "ResembleAI/chatterbox",  # Default Hugging Face repository ID for the model
+        "repo_id": "ResembleAI/chatterbox-multilingual",  # Default Hugging Face repository ID for multilingual model
     },
     "tts_engine": {
         "device": "auto",  # TTS processing device: 'auto', 'cuda', 'mps', or 'cpu'.
@@ -248,7 +248,7 @@ class YamlConfigManager:
                     f"CUDA is reported as available but failed functionality test: {e}. "
                     f"This usually means PyTorch was not compiled with CUDA support."
                 )
-        
+
         # Test MPS if CUDA is not available or failed
         if torch.backends.mps.is_available():
             try:
@@ -263,7 +263,7 @@ class YamlConfigManager:
                     f"MPS is reported as available but failed functionality test: {e}. "
                     f"This usually means PyTorch was not compiled with MPS support."
                 )
-        
+
         logger.info("Neither CUDA nor MPS is available or functional. Using CPU.")
         return "cpu"
 

@@ -12,8 +12,9 @@ torchaudio==2.5.1
 
 # --- Core Application Dependencies ---
 
-# Install chatterbox from our Colab-compatible fork instead of PyPI
-git+https://github.com/devnen/chatterbox.git
+# Install chatterbox - version 0.1.4+ required for multilingual support
+# Using PyPI version for multilingual support (ChatterboxMultilingualTTS)
+chatterbox-tts>=0.1.4
 
 # Core Web Framework
 fastapi

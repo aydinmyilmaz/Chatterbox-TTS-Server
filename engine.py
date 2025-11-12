@@ -225,8 +225,9 @@ def synthesize(
         cfg_weight: Classifier-Free Guidance weight.
         seed: Random seed for generation. If 0, default randomness is used.
               If non-zero, a global seed is set for reproducibility.
-        language: Language code for multilingual synthesis (e.g., 'en', 'ar', 'tr', 'de', 'fr', 'nl').
-                 If None, model will attempt to auto-detect or use default.
+        language: Language code (ISO 639-1) for multilingual synthesis (e.g., 'en', 'ar', 'tr', 'de', 'fr', 'nl').
+                 This is passed as 'language_id' to ChatterboxMultilingualTTS.generate().
+                 If None, defaults to 'en'.
 
     Returns:
         A tuple containing the audio waveform (torch.Tensor) and the sample rate (int),
@@ -251,23 +252,26 @@ def synthesize(
         logger.debug(
             f"Synthesizing with params: audio_prompt='{audio_prompt_path}', temp={temperature}, "
             f"exag={exaggeration}, cfg_weight={cfg_weight}, seed_applied_globally_if_nonzero={seed}, "
-            f"language={language}"
+            f"language_id={language}"
         )
 
-        # Call the core model's generate method with language parameter for multilingual support
-        generate_kwargs = {
-            "text": text,
-            "audio_prompt_path": audio_prompt_path,
-            "temperature": temperature,
-            "exaggeration": exaggeration,
-            "cfg_weight": cfg_weight,
-        }
+        # Call the core model's generate method with language_id parameter
+        # ChatterboxMultilingualTTS.generate() REQUIRES 'language_id' as second positional parameter
+        # language_id should be ISO 639-1 code (e.g., 'ar', 'tr', 'en', 'de', 'fr', 'nl')
+        # Default to 'en' if not specified
+        language_id_to_use = language if language is not None else "en"
 
-        # Add language parameter if provided (required for multilingual model)
-        if language is not None:
-            generate_kwargs["language"] = language
+        logger.debug(f"Using language_id: {language_id_to_use} for text synthesis")
 
-        wav_tensor = chatterbox_model.generate(**generate_kwargs)
+        # language_id is a required positional parameter (second argument after text)
+        wav_tensor = chatterbox_model.generate(
+            text=text,
+            language_id=language_id_to_use,
+            audio_prompt_path=audio_prompt_path,
+            temperature=temperature,
+            exaggeration=exaggeration,
+            cfg_weight=cfg_weight,
+        )
 
         # The ChatterboxMultilingualTTS.generate method already returns a CPU tensor.
         return wav_tensor, chatterbox_model.sr

@@ -1,11 +1,20 @@
 # requirements-nvidia.txt (For NVIDIA GPU Installation)
 # Updated for chatterbox-tts>=0.1.4 (multilingual support)
 # PyTorch 2.6.0 is installed from PyPI (includes CUDA support)
+#
+# IMPORTANT: numpy must be installed FIRST (before chatterbox-tts) because
+# pkuseg (a chatterbox-tts dependency) requires numpy at build time.
+# The setup.sh script handles this automatically.
 
 # Note: PyTorch 2.6.0 with CUDA is available from PyPI, so we don't need --extra-index-url
 # If you need a specific CUDA version, uncomment and adjust the index URL below:
 # --extra-index-url https://download.pytorch.org/whl/cu121
 
+# --- Build Dependencies (install first) ---
+# numpy must be installed before chatterbox-tts to satisfy pkuseg build requirements
+numpy>=1.24.0,<1.26.0  # Required by chatterbox-tts==0.1.4
+
+# --- PyTorch (Deep Learning Framework) ---
 # Pinning PyTorch versions required by chatterbox-tts>=0.1.4
 torch==2.6.0
 torchvision==0.21.0  # Compatible with torch 2.6.0
@@ -15,6 +24,7 @@ torchaudio==2.6.0
 
 # Install chatterbox - version 0.1.4+ required for multilingual support
 # Using PyPI version for multilingual support (ChatterboxMultilingualTTS)
+# NOTE: numpy must be installed before this (see above)
 chatterbox-tts>=0.1.4
 
 # Core Web Framework
@@ -22,7 +32,6 @@ fastapi
 uvicorn[standard]
 
 # Other ML & Audio Libraries
-numpy>=1.24.0,<1.26.0  # Required by chatterbox-tts==0.1.4
 soundfile  # Requires libsndfile system library
 librosa
 safetensors

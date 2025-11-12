@@ -1,14 +1,15 @@
-# requirements-nvidia.txt (For NVIDIA GPU Installation with CUDA 12.1)
-# This file ensures a compatible set of CUDA-enabled torch packages are installed.
+# requirements-nvidia.txt (For NVIDIA GPU Installation)
+# Updated for chatterbox-tts>=0.1.4 (multilingual support)
+# PyTorch 2.6.0 is installed from PyPI (includes CUDA support)
 
-# Use the official PyTorch package index for CUDA 12.1.
---extra-index-url https://download.pytorch.org/whl/cu121
+# Note: PyTorch 2.6.0 with CUDA is available from PyPI, so we don't need --extra-index-url
+# If you need a specific CUDA version, uncomment and adjust the index URL below:
+# --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Pinning a compatible set of torch-related libraries is crucial to avoid dependency conflicts.
-# Updated to use PyTorch 2.5.1 for compatibility with our Colab-compatible chatterbox fork
-torch==2.5.1
-torchvision==0.20.1  # Compatible with torch 2.5.1
-torchaudio==2.5.1
+# Pinning PyTorch versions required by chatterbox-tts>=0.1.4
+torch==2.6.0
+torchvision==0.21.0  # Compatible with torch 2.6.0
+torchaudio==2.6.0
 
 # --- Core Application Dependencies ---
 
@@ -21,7 +22,7 @@ fastapi
 uvicorn[standard]
 
 # Other ML & Audio Libraries
-numpy>=1.26.0,<3.0.0  # More flexible to avoid conflicts
+numpy>=1.24.0,<1.26.0  # Required by chatterbox-tts==0.1.4
 soundfile  # Requires libsndfile system library
 librosa
 safetensors

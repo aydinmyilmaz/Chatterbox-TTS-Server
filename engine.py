@@ -158,9 +158,10 @@ def load_model() -> bool:
         logger.info(f"Final device selection: {model_device}")
 
         # Get configured model_repo_id for logging and context
-        # Default to multilingual model for multilingual TTS class
+        # Default to ResembleAI/chatterbox (multilingual model is in the same repo)
+        # Per Hugging Face implementation: REPO_ID = "ResembleAI/chatterbox"
         model_repo_id_config = config_manager.get_string(
-            "model.repo_id", "ResembleAI/chatterbox-multilingual"
+            "model.repo_id", "ResembleAI/chatterbox"
         )
 
         logger.info(
@@ -259,11 +260,13 @@ def synthesize(
         # ChatterboxMultilingualTTS.generate() REQUIRES 'language_id' as second positional parameter
         # language_id should be ISO 639-1 code (e.g., 'ar', 'tr', 'en', 'de', 'fr', 'nl')
         # Default to 'en' if not specified
-        language_id_to_use = language if language is not None else "en"
+        # IMPORTANT: Use lowercase language_id as per Hugging Face implementation
+        language_id_to_use = language.lower() if language is not None else "en"
 
         logger.debug(f"Using language_id: {language_id_to_use} for text synthesis")
 
         # language_id is a required positional parameter (second argument after text)
+        # Note: ChatterboxMultilingualTTS.generate() internally calls punc_norm() for text normalization
         wav_tensor = chatterbox_model.generate(
             text=text,
             language_id=language_id_to_use,

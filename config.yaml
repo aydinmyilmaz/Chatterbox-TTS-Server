@@ -9,7 +9,7 @@ server:
   log_file_max_size_mb: 10
   log_file_backup_count: 5
 model:
-  repo_id: ResembleAI/chatterbox-multilingual
+  repo_id: ResembleAI/chatterbox  # Multilingual model is in the same repo
 tts_engine:
   device: cuda
   predefined_voices_path: voices

@@ -1,5 +1,6 @@
 # File: engine.py
 # Core TTS model loading and speech generation logic.
+# Updated to use HF Space implementation for better multilingual support.
 
 import logging
 import random
@@ -8,10 +9,23 @@ import torch
 from typing import Optional, Tuple
 from pathlib import Path
 
-from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # Multilingual TTS engine class
-from chatterbox.models.s3gen.const import (
-    S3GEN_SR,
-)  # Default sample rate from the engine
+# Use HF Space implementation (more reliable for multilingual)
+try:
+    from chatterbox_hf.mtl_tts import ChatterboxMultilingualTTS, SUPPORTED_LANGUAGES
+except ImportError:
+    # Fallback to pip package if HF Space code not available
+    try:
+        from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+        SUPPORTED_LANGUAGES = ChatterboxMultilingualTTS.get_supported_languages()
+    except ImportError:
+        raise ImportError("Neither chatterbox_hf nor chatterbox package found. Please install chatterbox-tts or copy HF Space code.")
+
+# Sample rate will be obtained from the model instance
+try:
+    from chatterbox_hf.models.s3gen.const import S3GEN_SR
+except ImportError:
+    # Fallback: use default sample rate
+    S3GEN_SR = 24000
 
 # Import the singleton config_manager
 from config import config_manager
@@ -170,7 +184,9 @@ def load_model() -> bool:
         try:
             # Use ChatterboxMultilingualTTS.from_pretrained for multilingual support
             # The multilingual class knows its repo_id and handles language parameters properly
-            chatterbox_model = ChatterboxMultilingualTTS.from_pretrained(device=model_device)
+            # Convert device string to torch.device if needed (HF Space expects torch.device)
+            device_obj = torch.device(model_device) if isinstance(model_device, str) else model_device
+            chatterbox_model = ChatterboxMultilingualTTS.from_pretrained(device=device_obj)
             logger.info(
                 f"Successfully loaded ChatterboxMultilingualTTS on {model_device} (expected repo '{model_repo_id_config}')."
             )
@@ -267,13 +283,19 @@ def synthesize(
 
         # language_id is a required positional parameter (second argument after text)
         # Note: ChatterboxMultilingualTTS.generate() internally calls punc_norm() for text normalization
+        # HF Space implementation: audio_prompt_path can be None (uses default voice from conds.pt)
+        generate_kwargs = {
+            "language_id": language_id_to_use,
+            "temperature": temperature,
+            "exaggeration": exaggeration,
+            "cfg_weight": cfg_weight,
+        }
+        if audio_prompt_path:
+            generate_kwargs["audio_prompt_path"] = audio_prompt_path
+        
         wav_tensor = chatterbox_model.generate(
             text=text,
-            language_id=language_id_to_use,
-            audio_prompt_path=audio_prompt_path,
-            temperature=temperature,
-            exaggeration=exaggeration,
-            cfg_weight=cfg_weight,
+            **generate_kwargs
         )
 
         # The ChatterboxMultilingualTTS.generate method already returns a CPU tensor.

@@ -12,7 +12,9 @@
 
 # --- Build Dependencies (install first) ---
 # numpy must be installed before chatterbox-tts to satisfy pkuseg build requirements
-numpy>=1.24.0,<1.26.0  # Required by chatterbox-tts==0.1.4
+# Updated for HF Space compatibility (uses numpy==1.26.0)
+numpy==1.26.0  # HF Space uses 1.26.0, but chatterbox-tts requires <1.26.0
+# Note: If numpy==1.26.0 causes issues, use: numpy>=1.24.0,<1.26.0
 
 # --- PyTorch (Deep Learning Framework) ---
 # Pinning PyTorch versions required by chatterbox-tts>=0.1.4
@@ -33,9 +35,17 @@ uvicorn[standard]
 
 # Other ML & Audio Libraries
 soundfile  # Requires libsndfile system library
-librosa
+librosa==0.10.0  # HF Space uses 0.10.0
+resampy==0.4.3  # Required by HF Space
 safetensors
 descript-audio-codec
+s3tokenizer  # Required by HF Space implementation
+resemble-perth==1.0.1  # Watermarking library used by HF Space
+silero-vad==5.1.2  # Voice activity detection (optional but used by HF Space)
+conformer==0.3.2  # Required by HF Space
+omegaconf==2.3.0  # Configuration management (used by HF Space)
+diffusers==0.29.0  # Required by HF Space
+transformers==4.46.3  # HF Space uses specific version
 
 # Configuration & Utilities
 PyYAML
